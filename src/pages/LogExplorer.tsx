@@ -112,7 +112,7 @@ class LogExplorer extends Component<{}> {
           <div className="wrapperverifiers">
             <div className="tableselects">
               <div className="tabletitle">
-                <div className="title">Select issue number to show corresponding logs - type 0 to see general logs</div>
+                <div className="title">Select issue number to show corresponding LDN logs - type 0 to see general logs</div>
                 <div className="searchMakeReuestForm doublebutton"></div>
                 <TextField id="filled-basic"
                   label="search"
