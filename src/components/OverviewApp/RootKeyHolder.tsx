@@ -32,28 +32,13 @@ type RootKeyHolderState = {
   refRequests: any;
   sortOrderRequest: number;
   orderByRequest: string;
+  cancelProposalData: any
 };
 
 type RootKeyHolderProps = {
   searchString: string;
 };
 
-const data = [
-  {
-    clientName: "Ron Keyner",
-    issueNumber: 789,
-    clientAddress: 'f123123912',
-    txId: 1,
-    datacap: "10PiB"
-  },
-  {
-    clientName: "Jon Doe",
-    issueNumber: 345,
-    clientAddress: 'f12123',
-    txId: 4,
-    datacap: "5PiB"
-  }
-]
 
 export default class RootKeyHolder extends Component<
   RootKeyHolderProps,
@@ -71,7 +56,8 @@ export default class RootKeyHolder extends Component<
     refRequests: {} as any,
     orderByRequest: "addresses",
     sortOrderRequest: -1,
-    selectedCancelProposal: null
+    selectedCancelProposal: null,
+    cancelProposalData: []
   };
 
   acceptedNotaryColums = [
@@ -89,10 +75,12 @@ export default class RootKeyHolder extends Component<
     { id: "proposedBy", value: "Proposed by" },
   ];
 
-  componentDidMount() {
+  async componentDidMount() {
     this.context.loadVerifierAndPendingRequests();
 
-    this.context.cancelProposalData()
+    const data = await this.context.cancelProposalData()
+
+    this.setState({ cancelProposalData: data })
   }
 
   showVerifierRequests = async () => {
@@ -108,7 +96,7 @@ export default class RootKeyHolder extends Component<
   };
 
   cancelProposal = (cancelProposalObj: any) => {
-    //const msig = "t1000"
+    //const msig = "t01021"
     console.log(cancelProposalObj)
   }
 
@@ -721,7 +709,7 @@ export default class RootKeyHolder extends Component<
               onSelectedRowsChange={({ selectedRows }) => {
                 this.setState({ selectedCancelProposal: selectedRows[0] })
               }}
-              data={data}
+              data={this.state.cancelProposalData}
               columns={[
                 {
                   name: "Client Name",

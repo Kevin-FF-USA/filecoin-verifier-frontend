@@ -98,19 +98,80 @@ export default class DataProvider extends React.Component<
         });
       },
       cancelProposalData: async () => {
-        const allOpenIssues = await this.props.github.githubOcto.paginate(
-          this.props.github.githubOcto.issues.listForRepo,
-          {
+        //GET all the issues with state "OPEN"
+        const issues = await this.props.github.githubOcto
+          .paginate(this.props.github.githubOcto.rest.issues.listForRepo, {
             owner: config.onboardingLargeOwner,
             repo: config.onboardingLargeClientRepo,
-            assignee: "*",
             state: "open",
+          })
+
+        //extract issue numbers for getting all the comments
+        const issueNumbers = issues.map((item: any) => item.number)
+
+        //create get comments function for promiseAll
+        const commentGetters = (number: any) => {
+          return this.props.github.githubOcto.rest.issues.listComments({
+            owner: config.onboardingLargeOwner,
+            repo: config.onboardingLargeClientRepo,
+            issue_number: number
+          });
+        }
+
+        //create array of Promise with issueNumbers for promise all 
+        const allIssueComment = issueNumbers.map((item: any) => commentGetters(item))
+
+        //get all the arrayofcomments inside of Array
+        const arrayOfArrayWithComments: any = await Promise.all(allIssueComment)
+
+
+        let issuesToFetch: any = []
+
+        // figure out the issue which one has "to cancel" in the comments 
+        for (let comments of arrayOfArrayWithComments) {
+          if (comments.data.find((item: any) => item.body.includes("to cancel"))) {
+            const issue = comments.url.split("/")
+
+            const issueNumber = issue[issue.length - 2]
+
+            issuesToFetch.push(issueNumber)
           }
-        );
+        }
 
-        const issueNumbers = allOpenIssues.map((item: any) => item.number)
+        //create get issue function for promiseAll
+        const issueGetters = (number: any) => {
+          return this.props.github.githubOcto.rest.issues.get({
+            owner: config.onboardingLargeOwner,
+            repo: config.onboardingLargeClientRepo,
+            issue_number: number
+          });
+        }
 
-        console.log(issueNumbers)
+        // getTx function is undefined ASK !!!
+        //console.log(this.props.wallet.api)
+
+        //getting all the issue for cancel request
+        const getAllIssueToCancel = issuesToFetch.map((item: any) => issueGetters(item))
+
+        //fetching all the issue with promise all
+        const allIssueToCancel: any = await Promise.all(getAllIssueToCancel)
+
+        // createing new object for the frontend table
+        const infoCancelDataAll = allIssueToCancel.map((item: any) => {
+
+          const data = largeutils.parseIssue(item.data.body);
+
+          return {
+            issueNumber: item.data.number,
+            url: item.url,
+            clientName: data.name,
+            clientAddress: data.address,
+            datacap: data.datacapRequested,
+            txId: 1
+          }
+        })
+
+        return infoCancelDataAll
       },
       postLogs: async (
         message: string,
