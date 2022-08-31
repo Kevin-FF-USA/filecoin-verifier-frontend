@@ -54,6 +54,7 @@ interface DataProviderStates {
   logToSentry: any;
   fetchLogs: any;
   postLogs: any;
+  cancelProposalData: any;
   approvedNotariesLoading: boolean;
   ldnRequestsLoading: boolean;
   updateContextState: any;
@@ -95,6 +96,21 @@ export default class DataProvider extends React.Component<
           largeClientRequests: [],
           ldnRequestsLoading: false,
         });
+      },
+      cancelProposalData: async () => {
+        const allOpenIssues = await this.props.github.githubOcto.paginate(
+          this.props.github.githubOcto.issues.listForRepo,
+          {
+            owner: config.onboardingLargeOwner,
+            repo: config.onboardingLargeClientRepo,
+            assignee: "*",
+            state: "open",
+          }
+        );
+
+        const issueNumbers = allOpenIssues.map((item: any) => item.number)
+
+        console.log(issueNumbers)
       },
       postLogs: async (
         message: string,

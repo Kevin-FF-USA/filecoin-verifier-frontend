@@ -29,7 +29,7 @@ export const Data = React.createContext({
   verifyWalletAddress: async () => { },
   checkVerifyWallet: async () => { },
   setIsVerifyWalletLoading: () => { },
-
+  cancelProposalData: async () => { },
   postLogs: async (
     message: string,
     type: string,

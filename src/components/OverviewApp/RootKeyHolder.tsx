@@ -22,6 +22,7 @@ const parser = require("@keyko-io/filecoin-verifier-tools/utils/notary-issue-par
 const largeutils = require("@keyko-io/filecoin-verifier-tools/utils/large-issue-parser");
 
 type RootKeyHolderState = {
+  selectedCancelProposal: any;
   tabs: string;
   approveLoading: boolean;
   selectedTransactions: any[];
@@ -36,6 +37,23 @@ type RootKeyHolderState = {
 type RootKeyHolderProps = {
   searchString: string;
 };
+
+const data = [
+  {
+    clientName: "Ron Keyner",
+    issueNumber: 789,
+    clientAddress: 'f123123912',
+    txId: 1,
+    datacap: "10PiB"
+  },
+  {
+    clientName: "Jon Doe",
+    issueNumber: 345,
+    clientAddress: 'f12123',
+    txId: 4,
+    datacap: "5PiB"
+  }
+]
 
 export default class RootKeyHolder extends Component<
   RootKeyHolderProps,
@@ -53,6 +71,7 @@ export default class RootKeyHolder extends Component<
     refRequests: {} as any,
     orderByRequest: "addresses",
     sortOrderRequest: -1,
+    selectedCancelProposal: null
   };
 
   acceptedNotaryColums = [
@@ -72,15 +91,26 @@ export default class RootKeyHolder extends Component<
 
   componentDidMount() {
     this.context.loadVerifierAndPendingRequests();
-  }
 
-  showApproved = async () => {
-    this.setState({ tabs: "2" });
-  };
+    this.context.cancelProposalData()
+  }
 
   showVerifierRequests = async () => {
     this.setState({ tabs: "0" });
   };
+
+  showDuplicate = async () => {
+    this.setState({ tabs: "2" });
+  };
+
+  showApproved = async () => {
+    this.setState({ tabs: "1" });
+  };
+
+  cancelProposal = (cancelProposalObj: any) => {
+    //const msig = "t1000"
+    console.log(cancelProposalObj)
+  }
 
   selectRow = (transactionId: string) => {
     let selectedTxs = this.state.selectedTransactions;
@@ -516,12 +546,20 @@ export default class RootKeyHolder extends Component<
               Notary Requests ({this.context.verifierAndPendingRequests.length})
             </div>
             <div
-              className={this.state.tabs === "2" ? "selected" : ""}
+              className={this.state.tabs === "1" ? "selected" : ""}
               onClick={() => {
                 this.showApproved();
               }}
             >
               Accepted Notaries ({this.context.verified.length})
+            </div>
+            <div
+              className={this.state.tabs === "2" ? "selected" : ""}
+              onClick={() => {
+                this.showDuplicate();
+              }}
+            >
+              Duplicate Requests
             </div>
           </div>
           <div className="tabssadd">
@@ -542,83 +580,103 @@ export default class RootKeyHolder extends Component<
                 </ButtonPrimary>
               </>
             ) : null}
+            {this.state.tabs === "2" && <button
+              style={{
+                color: "white",
+                height: "100%",
+                borderRadius: "4px",
+                border: "none",
+                padding: "0 10px",
+                cursor: `${!this.state.selectedCancelProposal ? "not-allowed" : "pointer"}`,
+                background: `${!this.state.selectedCancelProposal ? "#0090ff85" : ""}`
+              }}
+              disabled={!this.state.selectedCancelProposal}
+              onClick={() => {
+                this.cancelProposal(this.state.selectedCancelProposal)
+              }}
+            >
+              Cancel Proposal
+            </button>}
           </div>
         </div>
-        {this.state.tabs === "0" ? (
-          !this.context.isPendingRequestLoading ? (
+        {
+          this.state.tabs === "0" ? (
+            !this.context.isPendingRequestLoading ? (
 
-            <div style={{ minHeight: "500px" }}>
-              <DataTable
-                columns={[
-                  {
-                    name: "Status",
-                    selector: (row: any) => row.proposed,
-                    sortable: true,
-                    cell: (row: any) => (
-                      <span>{row.proposed ? "Proposed" : "Pending"}</span>
-                    ),
-                  },
-                  {
-                    name: "Issue",
-                    selector: (row: any) => row.issue_number,
-                    sortable: true,
-                    cell: (row: any) => (
-                      <a
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        href={row.issue_Url}
-                      >
-                        #{row.issue_number}
-                      </a>
-                    ),
-                  },
-                  {
-                    name: "Address",
-                    selector: (row: any) => row.addresses,
-                    sortable: true,
-                  },
-                  {
-                    name: "Datacap",
-                    selector: (row: any) => row.datacaps,
-                    sortable: true,
-                  },
-                  {
-                    name: "Transaction ID",
-                    selector: (row: any) => row.txs,
-                    grow: 2,
-                    cell: (row: any) => (
-                      <span>{row.txs.length === 0 ? "-" : row.txs[0].id}</span>
-                    ),
-                  },
-                  {
-                    name: "Proposed by",
-                    selector: (row: any) => row.proposedBy,
-                    sortable: true,
-                    grow: 2,
-                  },
-                ]}
-                data={this.context.verifierAndPendingRequests}
-                pagination
-                paginationRowsPerPageOptions={[10, 20, 30]}
-                paginationPerPage={10}
-                selectableRows
-                noDataComponent="No pending requests yet"
-                selectableRowsHighlight={true}
-                selectableRowsNoSelectAll={true}
-                onSelectedRowsChange={({ selectedRows }) => {
-                  this.context.selectNotaryRequest(selectedRows);
-                }}
+              <div style={{ minHeight: "500px" }}>
+                <DataTable
+                  columns={[
+                    {
+                      name: "Status",
+                      selector: (row: any) => row.proposed,
+                      sortable: true,
+                      cell: (row: any) => (
+                        <span>{row.proposed ? "Proposed" : "Pending"}</span>
+                      ),
+                    },
+                    {
+                      name: "Issue",
+                      selector: (row: any) => row.issue_number,
+                      sortable: true,
+                      cell: (row: any) => (
+                        <a
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          href={row.issue_Url}
+                        >
+                          #{row.issue_number}
+                        </a>
+                      ),
+                    },
+                    {
+                      name: "Address",
+                      selector: (row: any) => row.addresses,
+                      sortable: true,
+                    },
+                    {
+                      name: "Datacap",
+                      selector: (row: any) => row.datacaps,
+                      sortable: true,
+                    },
+                    {
+                      name: "Transaction ID",
+                      selector: (row: any) => row.txs,
+                      grow: 2,
+                      cell: (row: any) => (
+                        <span>{row.txs.length === 0 ? "-" : row.txs[0].id}</span>
+                      ),
+                    },
+                    {
+                      name: "Proposed by",
+                      selector: (row: any) => row.proposedBy,
+                      sortable: true,
+                      grow: 2,
+                    },
+                  ]}
+                  data={this.context.verifierAndPendingRequests}
+                  pagination
+                  paginationRowsPerPageOptions={[10, 20, 30]}
+                  paginationPerPage={10}
+                  selectableRows
+                  noDataComponent="No pending requests yet"
+                  selectableRowsHighlight={true}
+                  selectableRowsNoSelectAll={true}
+                  onSelectedRowsChange={({ selectedRows }) => {
+                    this.context.selectNotaryRequest(selectedRows);
+                  }}
+                />
+              </div>
+
+            ) : (
+              <CircularProgress
+                style={{ margin: "200px 50%", color: "rgb(0, 144, 255)" }}
               />
-            </div>
+            )
+          ) : null
+        }
 
-          ) : (
-            <CircularProgress
-              style={{ margin: "200px 50%", color: "rgb(0, 144, 255)" }}
-            />
-          )
-        ) : null}
-
-        {this.state.tabs === "2" &&
+        {
+          this.state.tabs === "1" &&
           (this.context.verified.length > 0 ? (
             <div style={{ minHeight: "500px" }}>
               <DataTable
@@ -651,8 +709,45 @@ export default class RootKeyHolder extends Component<
             <CircularProgress
               style={{ margin: "200px 50%", color: "rgb(0, 144, 255)" }}
             />
-          ))}
-      </div>
+          ))
+        }
+
+        {
+          this.state.tabs === "2" && <div style={{ minHeight: "500px" }}>
+            <DataTable
+              selectableRows
+              selectableRowsHighlight={true}
+              selectableRowsSingle={true}
+              onSelectedRowsChange={({ selectedRows }) => {
+                this.setState({ selectedCancelProposal: selectedRows[0] })
+              }}
+              data={data}
+              columns={[
+                {
+                  name: "Client Name",
+                  selector: (row: any) => row.clientName,
+                },
+                {
+                  name: "Issue Number",
+                  selector: (row: any) => row.issueNumber,
+                },
+                {
+                  name: "Client Address",
+                  selector: (row: any) => row.clientAddress,
+                },
+                {
+                  name: "Tx Id",
+                  selector: (row: any) => row.txId,
+                },
+                {
+                  name: "Datacap",
+                  selector: (row: any) => row.datacap,
+                },
+              ]}
+            />
+          </div>
+        }
+      </div >
     );
   }
 }
