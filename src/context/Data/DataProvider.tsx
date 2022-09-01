@@ -147,8 +147,10 @@ export default class DataProvider extends React.Component<
           });
         }
 
-        // getTx function is undefined ASK !!!
-        //console.log(this.props.wallet.api)
+        const x = await this.props.wallet.api.getTxFromMsgCid("bafy2bzacedkr7c7qzh2tkj7adzft2twkm6cfn5ddavshm737wrnzb3aletwqk")
+
+        //getting txID function
+        console.log(x)
 
         //getting all the issue for cancel request
         const getAllIssueToCancel = issuesToFetch.map((item: any) => issueGetters(item))
@@ -156,14 +158,14 @@ export default class DataProvider extends React.Component<
         //fetching all the issue with promise all
         const allIssueToCancel: any = await Promise.all(getAllIssueToCancel)
 
-        // createing new object for the frontend table
+        // create new object for the frontend table
         const infoCancelDataAll = allIssueToCancel.map((item: any) => {
 
           const data = largeutils.parseIssue(item.data.body);
 
           return {
             issueNumber: item.data.number,
-            url: item.url,
+            url: item.data.html_url,
             clientName: data.name,
             clientAddress: data.address,
             datacap: data.datacapRequested,
