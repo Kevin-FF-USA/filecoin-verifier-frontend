@@ -716,12 +716,22 @@ export default class RootKeyHolder extends Component<
                   selector: (row: any) => row.clientName,
                 },
                 {
-                  name: "Issue Number",
-                  selector: (row: any) => row.issueNumber,
-                },
-                {
                   name: "Client Address",
                   selector: (row: any) => row.clientAddress,
+                  grow: 2,
+                },
+                {
+                  name: "Issue Number",
+                  selector: (row: any) => row.issueNumber,
+                  cell: (row: any) => (
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={row.url}
+                    >
+                      #{row.issueNumber}
+                    </a>
+                  ),
                 },
                 {
                   name: "Tx Id",
