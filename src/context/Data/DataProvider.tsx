@@ -125,16 +125,30 @@ export default class DataProvider extends React.Component<
         const arrayOfArrayWithComments: any = await Promise.all(allIssueComment)
 
 
-        let issuesToFetch: any = []
+        let issuesToFetch: { issueNumber: string, txId: number }[] = []
 
         // figure out the issue which one has "to cancel" in the comments 
-        for (let comments of arrayOfArrayWithComments) {
-          if (comments.data.find((item: any) => item.body.includes("to cancel"))) {
+        for (const comments of arrayOfArrayWithComments) {
+          const commentWithCancelFlag = comments.data.find((item: any) => item.body.includes("to cancel"))
+
+          if (commentWithCancelFlag) {
             const issue = comments.url.split("/")
 
             const issueNumber = issue[issue.length - 2]
 
-            issuesToFetch.push(issueNumber)
+            const parsedResult = largeutils.parseApprovedRequestWithSignerAddress(commentWithCancelFlag.body)
+
+            const tx = await this.props.wallet.api.getTxFromMsgCid(parsedResult.message)
+
+            let txId;
+
+            if (tx) {
+              txId = tx
+            } else {
+              txId = 9999
+            }
+
+            issuesToFetch.push({ issueNumber, txId })
           }
         }
 
@@ -153,7 +167,7 @@ export default class DataProvider extends React.Component<
         console.log(x)
 
         //getting all the issue for cancel request
-        const getAllIssueToCancel = issuesToFetch.map((item: any) => issueGetters(item))
+        const getAllIssueToCancel = issuesToFetch.map((item) => issueGetters(item.issueNumber))
 
         //fetching all the issue with promise all
         const allIssueToCancel: any = await Promise.all(getAllIssueToCancel)
@@ -163,13 +177,22 @@ export default class DataProvider extends React.Component<
 
           const data = largeutils.parseIssue(item.data.body);
 
+          let txId;
+
+          for (let issue of issuesToFetch) {
+
+            if (parseInt(issue.issueNumber) === item.data.number) {
+              txId = issue.txId
+            }
+          }
+
           return {
             issueNumber: item.data.number,
             url: item.data.html_url,
             clientName: data.name,
             clientAddress: data.address,
             datacap: data.datacapRequested,
-            txId: 1
+            txId
           }
         })
 
