@@ -161,11 +161,6 @@ export default class DataProvider extends React.Component<
           });
         }
 
-        const x = await this.props.wallet.api.getTxFromMsgCid("bafy2bzacedkr7c7qzh2tkj7adzft2twkm6cfn5ddavshm737wrnzb3aletwqk")
-
-        //getting txID function
-        console.log(x)
-
         //getting all the issue for cancel request
         const getAllIssueToCancel = issuesToFetch.map((item) => issueGetters(item.issueNumber))
 
